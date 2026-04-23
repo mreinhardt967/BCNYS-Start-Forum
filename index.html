@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BCNYS · AI Readiness Assessment · Presented by Accenture</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #f1f5f9; min-height: 100vh; }
+  .screen { display: none; min-height: 100vh; padding: 24px; align-items: center; justify-content: center; flex-direction: column; }
+  .screen.active { display: flex; }
+  .results-screen { display: none; min-height: 100vh; padding: 32px 20px; }
+  .results-screen.active { display: block; }
+  .inner { max-width: 640px; width: 100%; text-align: center; }
+  .badge { color: #94a3b8; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; }
+  .logo { width: 42px; height: 42px; background: #1a56db; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  h1 { font-size: clamp(20px, 4vw, 32px); font-weight: 800; line-height: 1.25; margin-bottom: 12px; }
+  h1 span { color: #60a5fa; }
+  .sub { color: #94a3b8; font-size: 14px; line-height: 1.7; margin-bottom: 32px; }
+  .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .btn { border: none; border-radius: 12px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: #1a56db; color: #fff; }
+  .btn-primary:hover { background: #1e40af; }
+  .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+  .btn-outline:hover { background: #1e293b; color: #f1f5f9; }
+  .btn-sm { padding: 9px 20px; font-size: 13px; font-weight: 600; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .qr-box { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+  .qr-box p { color: #94a3b8; font-size: 13px; margin-bottom: 14px; }
+  #qr-welcome, #qr-results { display: inline-block; padding: 8px; background: #fff; border-radius: 10px; }
+  .qr-url { color: #475569; font-size: 11px; margin-top: 10px; word-break: break-all; }
+  .note { color: #334155; font-size: 11px; }
+
+  /* Vote */
+  .progress-bar { background: #1e293b; border-radius: 99px; height: 6px; margin-bottom: 36px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #1a56db, #60a5fa); border-radius: 99px; transition: width 0.4s ease; }
+  .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .q-label { color: #60a5fa; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .q-count { color: #64748b; font-size: 13px; }
+  .q-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 36px 32px; margin-bottom: 24px; transition: opacity 0.25s, transform 0.25s; }
+  .q-card.fade { opacity: 0; transform: translateY(10px); }
+  .q-icon { font-size: 24px; margin-bottom: 14px; }
+  .q-text { font-size: clamp(16px, 2.5vw, 21px); font-weight: 600; line-height: 1.5; color: #f1f5f9; }
+  .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ans-btn { border-radius: 16px; padding: 20px; font-size: 20px; font-weight: 800; cursor: pointer; border: 2px solid; transition: all 0.15s; }
+  .ans-yes { background: #064e3b; color: #34d399; border-color: #065f46; }
+  .ans-yes:hover { background: #065f46; transform: scale(1.03); }
+  .ans-no { background: #450a0a; color: #f87171; border-color: #7f1d1d; }
+  .ans-no:hover { background: #7f1d1d; transform: scale(1.03); }
+  .anon-note { color: #475569; font-size: 11px; text-align: center; margin-top: 18px; }
+
+  /* Submit-state for Sheets sync */
+  .submitting { color: #60a5fa; font-size: 13px; text-align: center; margin-top: 18px; }
+  .submit-error { color: #f87171; font-size: 13px; text-align: center; margin-top: 12px; }
+
+  /* Results */
+  .results-inner { max-width: 900px; margin: 0 auto; }
+  .results-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+  .results-title h2 { font-size: clamp(18px, 2.5vw, 26px); font-weight: 800; margin: 8px 0 4px; }
+  .results-title .rcount { color: #64748b; font-size: 13px; }
+  .header-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  .sync-bar { display: flex; align-items: center; gap: 10px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 12px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 99px; flex-shrink: 0; }
+  .sync-dot.live { background: #34d399; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); animation: pulse 2s infinite; }
+  .sync-dot.local { background: #fbbf24; }
+  .sync-dot.error { background: #f87171; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.6); } 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+  .sync-text { color: #94a3b8; flex: 1; }
+  .sync-text strong { color: #f1f5f9; font-weight: 600; }
+  .sync-actions { display: flex; gap: 8px; }
+  .sync-btn { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .sync-btn:hover { background: #0f172a; color: #f1f5f9; }
+
+  .score-card { background: #1e293b; border-radius: 20px; padding: 28px 32px; margin-bottom: 28px; text-align: center; border: 2px solid transparent; }
+  .score-label { color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .score-num { font-size: 66px; font-weight: 900; line-height: 1; }
+  .score-badge { display: inline-block; margin-top: 10px; padding: 5px 18px; border-radius: 99px; font-weight: 700; font-size: 14px; border: 1px solid transparent; }
+  .score-tally { margin-top: 16px; display: flex; justify-content: center; gap: 28px; }
+  .tally-yes { color: #34d399; font-weight: 700; font-size: 18px; }
+  .tally-no { color: #f87171; font-weight: 700; font-size: 18px; }
+  .tally-lbl { color: #64748b; font-size: 12px; margin-left: 5px; }
+  .chart-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 24px 20px; margin-bottom: 24px; }
+  .chart-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .chart-card p { color: #64748b; font-size: 12px; margin-bottom: 18px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .metric-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 18px; }
+  .metric-icon { font-size: 20px; margin-bottom: 8px; }
+  .metric-q { color: #94a3b8; font-size: 11px; line-height: 1.5; margin-bottom: 8px; }
+  .metric-pct { font-size: 30px; font-weight: 800; }
+  .metric-sub { color: #475569; font-size: 11px; }
+  .metric-bar { margin-top: 8px; background: #0f172a; border-radius: 99px; height: 5px; overflow: hidden; }
+  .metric-fill { height: 100%; border-radius: 99px; }
+  .footer-btns { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; padding-bottom: 40px; margin-top: 8px; }
+
+  /* Setup modal */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-backdrop.active { display: flex; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 28px; max-width: 540px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .modal .modal-sub { color: #94a3b8; font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; color: #94a3b8; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .field input { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 11px 14px; color: #f1f5f9; font-size: 14px; font-family: inherit; }
+  .field input:focus { outline: none; border-color: #60a5fa; }
+  .field .hint { color: #64748b; font-size: 11px; margin-top: 5px; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+  .test-status { font-size: 12px; padding: 10px 14px; border-radius: 8px; margin-top: 12px; display: none; }
+  .test-status.ok { display: block; background: #064e3b; color: #34d399; border: 1px solid #065f46; }
+  .test-status.err { display: block; background: #450a0a; color: #f87171; border: 1px solid #7f1d1d; }
+  .setup-steps { background: #0f172a; border-radius: 10px; padding: 16px; margin-top: 18px; font-size: 12px; color: #94a3b8; line-height: 1.7; }
+  .setup-steps strong { color: #f1f5f9; }
+  .setup-steps ol { padding-left: 20px; margin-top: 8px; }
+  .setup-steps code { background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #fbbf24; font-size: 11px; }
+
+  .icon-btn { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .icon-btn:hover { background: #1e293b; color: #f1f5f9; }
+
+  /* Co-brand row (BCNYS + Accenture) */
+  .cobrand { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .brand-chip { display: flex; align-items: center; gap: 10px; color: #94a3b8; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .brand-sep { width: 1px; height: 28px; background: #334155; }
+  .presented-by { color: #64748b; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+  /* Accenture wordmark — approximates the official mark (lowercase sans with > above the t) */
+  .acc-mark { display: inline-flex; align-items: baseline; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 700; font-size: 17px; color: #f1f5f9; letter-spacing: -0.5px; line-height: 1; }
+  .acc-mark .acc-pre { letter-spacing: -0.5px; }
+  .acc-mark .acc-t-wrap { position: relative; display: inline-block; }
+  .acc-mark .acc-gt { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); color: #A100FF; font-size: 11px; font-weight: 900; line-height: 1; }
+  .acc-mark .acc-post { letter-spacing: -0.5px; }
+
+  /* Vote-screen footer co-brand */
+  .vote-footer { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 22px; padding-top: 16px; border-top: 1px solid #1e293b; color: #64748b; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+  .vote-footer .acc-mark { font-size: 13px; }
+  .vote-footer .acc-mark .acc-gt { top: -7px; font-size: 9px; }
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<div class="screen active" id="screen-welcome">
+  <div class="inner">
+    <div class="cobrand">
+      <div class="brand-chip"><div class="logo">🏙️</div> Business Council of New York State</div>
+      <div class="brand-sep"></div>
+      <div class="brand-chip" style="gap:8px;">
+        <span class="presented-by">Presented by</span>
+        <span class="acc-mark" aria-label="accenture">
+          <span class="acc-pre">accen</span><span class="acc-t-wrap">t<span class="acc-gt">&gt;</span></span><span class="acc-post">ure</span>
+        </span>
+      </div>
+    </div>
+    <h1>New York's AI Moment:<br><span>Workforce, Competitiveness &amp;<br>What Business Leaders Must Do Now</span></h1>
+    <p class="sub">5-question anonymous AI readiness check.<br>No login · No names · Aggregated results only.</p>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="startVote()">Take the Assessment →</button>
+      <button class="btn btn-outline" onclick="showResults()">📊 Presenter View</button>
+      <button class="btn btn-outline" onclick="toggleQR(&#39;welcome&#39;)">📱 Show QR Code</button>
+    </div>
+    <div class="qr-box" id="qr-box-welcome" style="display:none;">
+      <p>Share with attendees — scan to open on any device</p>
+      <div id="qr-welcome"></div>
+      <p class="qr-url" id="qr-url-welcome"></p>
+    </div>
+    <p class="note">Fully anonymized · No personal or organizational data collected</p>
+    <div style="margin-top: 28px;">
+      <button class="icon-btn" onclick="openSetup()">⚙️ Setup Google Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOTE -->
+<div class="screen" id="screen-vote">
+  <div class="inner" style="text-align:left;">
+    <div class="q-header">
+      <span class="q-label">BCNYS · AI Readiness</span>
+      <span class="q-count" id="q-count">Question 1 of 5</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+    <div class="q-card" id="q-card">
+      <div class="q-icon" id="q-icon">📋</div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="ans-grid">
+      <button class="ans-btn ans-yes" id="btn-yes" onclick="answer(&#39;yes&#39;)">✅ YES</button>
+      <button class="ans-btn ans-no" id="btn-no" onclick="answer(&#39;no&#39;)">❌ NO</button>
+    </div>
+    <p class="anon-note">Your response is anonymous. No identifying data is collected.</p>
+    <p class="submitting" id="submit-status" style="display:none;">Submitting your responses…</p>
+    <p class="submit-error" id="submit-error" style="display:none;"></p>
+    <div class="vote-footer">
+      <span>BCNYS</span>
+      <span style="color:#334155;">·</span>
+      <span class="presented-by">Presented by</span>
+      <span class="acc-mark" aria-label="accenture">
+        <span class="acc-pre">accen</span><span class="acc-t-wrap">t<span class="acc-gt">&gt;</span></span><span class="acc-post">ure</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="results-screen" id="screen-results">
+  <div class="results-inner">
+    <div class="results-header">
+      <div class="results-title">
+        <span style="color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">BCNYS · Live Results · Presented by Accenture</span>
+        <h2>New York's AI Moment: Room Snapshot</h2>
+        <p class="rcount" id="rcount">2 responses · Fully anonymized</p>
+      </div>
+      <div class="header-btns">
+        <button class="btn btn-primary btn-sm" id="my-pdf-btn" onclick="downloadMyResponses()" style="display:none;">⬇ Download My Responses</button>
+        <button class="btn btn-outline btn-sm" onclick="exportPDF()">⬇ Download Report PDF</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleQR(&#39;results&#39;)">📱 QR Code</button>
+      </div>
+    </div>
+
+    <div class="sync-bar" id="sync-bar">
+      <span class="sync-dot live" id="sync-dot"></span>
+      <span class="sync-text" id="sync-text"><strong>Live · Google Sheets</strong> · Session "<code>bcny-default</code>" · 2 responses</span>
+      <div class="sync-actions">
+        <button class="sync-btn" onclick="refreshFromSheets()" id="refresh-btn" style="display: inline-block;">↻ Refresh</button>
+        <button class="sync-btn" onclick="openSetup()">⚙️ Setup</button>
+      </div>
+    </div>
+
+    <div class="qr-box" id="qr-box-results" style="display: block; text-align: center;">
+      <p>Display on screen — attendees scan to take the assessment</p>
+      <div id="qr-results"></div>
+      <p class="qr-url" id="qr-url-results" style="display:none;"></p>
+    </div>
+
+    <div class="score-card" id="score-card" style="border-color: rgba(26, 86, 219, 0.333);">
+      <p class="score-label">Overall Room AI Readiness</p>
+      <div class="score-num" id="score-num" style="color: rgb(26, 86, 219);">80%</div>
+      <div class="score-badge" id="score-badge" style="color: rgb(26, 86, 219); background: rgba(26, 86, 219, 0.133); border-color: rgba(26, 86, 219, 0.333);">AI-Forward</div>
+      <div class="score-tally">
+        <div><span class="tally-yes" id="tally-yes">8</span><span class="tally-lbl">Yes answers</span></div>
+        <div><span class="tally-no" id="tally-no">2</span><span class="tally-lbl">No answers</span></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Question-by-question breakdown</h3>
+      <p>% answering Yes vs. No per dimension</p>
+      <canvas id="bar-chart" height="629" style="box-sizing: border-box; display: block; height: 629px; width: 858px;" width="858"></canvas>
+    </div>
+
+    <div class="metric-grid" id="metric-grid"><div class="metric-card">
+      <div class="metric-icon">📋</div>
+      <div class="metric-q">Does your organization have a formal AI workforce transition plan?</div>
+      <div class="metric-pct" style="color:#34d399">100%</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:100%;background:#34d399"></div></div>
+    </div><div class="metric-card">
+      <div class="metric-icon">🔭</div>
+      <div class="metric-q">Have you mapped which roles in your company will look fundamentally different in three years?</div>
+      <div class="metric-pct" style="color:#34d399">100%</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:100%;background:#34d399"></div></div>
+    </div><div class="metric-card">
+      <div class="metric-icon">👥</div>
+      <div class="metric-q">Is your HR team equipped to retrain for AI-adjacent skills?</div>
+      <div class="metric-pct" style="color:#34d399">100%</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:100%;background:#34d399"></div></div>
+    </div><div class="metric-card">
+      <div class="metric-icon">💻</div>
+      <div class="metric-q">Has your IT team done an assessment of your organization's platform AI readiness?</div>
+      <div class="metric-pct" style="color:#f87171">0%</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:0%;background:#f87171"></div></div>
+    </div><div class="metric-card">
+      <div class="metric-icon">🗄️</div>
+      <div class="metric-q">Is your data reliable enough to be input into Agentic Agents and workstreams?</div>
+      <div class="metric-pct" style="color:#34d399">100%</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:100%;background:#34d399"></div></div>
+    </div></div>
+
+    <div class="chart-card">
+      <h3>Total readiness distribution</h3>
+      <p id="pie-sub">All 5 dimensions combined · 2 respondents</p>
+      <canvas id="pie-chart" height="858" style="box-sizing: border-box; display: block; height: 858px; width: 858px;" width="858"></canvas>
+    </div>
+
+    <div class="footer-btns">
+      <button class="btn btn-primary" onclick="startVote()" id="take-btn">Take the Assessment</button>
+      <button class="btn btn-outline" onclick="showWelcome()">← Back to Start</button>
+      <button class="btn btn-outline btn-sm" onclick="exportPDF()">⬇ Download Report PDF</button>
+    </div>
+    <p class="note" style="text-align:center;padding-bottom:32px;">All responses are fully anonymized. No personal or organizational data is retained.</p>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-backdrop" id="setup-modal">
+  <div class="modal">
+    <h3>⚙️ Google Sheets aggregation</h3>
+    <p class="modal-sub">Connect a Google Apps Script web app so responses from every phone in the room flow into one Sheet — and the Presenter View shows the live total. Leave blank to run in local-only demo mode.</p>
+
+    <div class="field">
+      <label for="qr-url">QR code target URL</label>
+      <input type="url" id="qr-url" placeholder="https://...">
+      <div class="hint">The hosted URL phones open when they scan the QR. The QR encodes this URL plus your Apps Script and session code below, so phones auto-configure on scan — no setup needed on the phone.</div>
+    </div>
+
+    <div class="field">
+      <label for="sheets-url">Apps Script web app URL</label>
+      <input type="url" id="sheets-url" placeholder="https://script.google.com/macros/s/.../exec">
+      <div class="hint">Ends in <code>/exec</code>. From your Apps Script deployment.</div>
+    </div>
+
+    <div class="field">
+      <label for="session-code">Session code</label>
+      <input type="text" id="session-code" placeholder="bcny-2026-forum">
+      <div class="hint">A label that groups responses for this specific session. Use the same code for every device at this event.</div>
+    </div>
+
+    <div class="test-status" id="test-status"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeSetup()">Cancel</button>
+      <button class="btn btn-outline btn-sm" onclick="testSheets()">Test connection</button>
+      <button class="btn btn-primary btn-sm" onclick="saveSetup()">Save</button>
+    </div>
+
+    <div class="setup-steps">
+      <strong>First-time setup (~5 min)</strong>
+      <ol>
+        <li>Create a new Google Sheet.</li>
+        <li><em>Extensions → Apps Script</em>. Paste the contents of <code>apps-script.gs</code> (shipped with this file) into <code>Code.gs</code> and save.</li>
+        <li><em>Deploy → New deployment → Type: Web app</em>. Set <em>Execute as: Me</em> and <em>Who has access: Anyone</em>. Authorize.</li>
+        <li>Copy the web app URL (ends in <code>/exec</code>) and paste it above.</li>
+        <li>Pick a session code, click <em>Test connection</em>, then <em>Save</em>.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { icon: "📋", short: "Formal AI Transition Plan", text: "Does your organization have a formal AI workforce transition plan?" },
+  { icon: "🔭", short: "Role Mapping (3-Year View)", text: "Have you mapped which roles in your company will look fundamentally different in three years?" },
+  { icon: "👥", short: "HR AI-Skills Readiness", text: "Is your HR team equipped to retrain for AI-adjacent skills?" },
+  { icon: "💻", short: "IT Platform AI Readiness", text: "Has your IT team done an assessment of your organization's platform AI readiness?" },
+  { icon: "🗄️", short: "Data Quality for Agents", text: "Is your data reliable enough to be input into Agentic Agents and workstreams?" },
+];
+
+const LS_SETUP = 'bcny_setup_v1';
+
+// State
+let responses = QUESTIONS.map(() => ({ yes: 0, no: 0 })); // local fallback aggregation
+let totalRespondents = 0; // tracked separately; for Sheets mode this comes from server
+let currentQ = 0;
+let answers = {};
+let submitted = false;
+let barChart, pieChart;
+let qrWelcomeDone = false, qrResultsDone = false;
+let pollTimer = null;
+let setup = { sheetsUrl: '', sessionCode: 'bcny-default', qrUrl: '' };
+let lastSubmittedAnswers = null; // Saved after submission so participant can re-download their PDF
+
+// ---------- Setup persistence ----------
+// Config sources (priority order):
+//   1. URL query params (?s=...&c=...) — how phones inherit config from scanning the QR
+//   2. localStorage — how the presenter laptop remembers config across reloads
+//   3. Defaults (empty / 'bcny-default')
+// When URL params are present, they're saved to localStorage so phones keep working on reload.
+function loadSetup() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_SETUP) || '{}');
+    setup.sheetsUrl = s.sheetsUrl || '';
+    setup.sessionCode = s.sessionCode || 'bcny-default';
+    setup.qrUrl = s.qrUrl || '';
+  } catch (e) {}
+
+  // Override from URL params if present (phones scanning the QR land here)
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const paramSheets = params.get('s');     // Apps Script /exec URL
+    const paramSession = params.get('c');    // session code
+    let changed = false;
+    if (paramSheets) { setup.sheetsUrl = paramSheets; changed = true; }
+    if (paramSession) { setup.sessionCode = paramSession; changed = true; }
+    if (changed) persistSetup();
+  } catch (e) {}
+}
+function persistSetup() {
+  localStorage.setItem(LS_SETUP, JSON.stringify(setup));
+}
+function isSheetsMode() {
+  return Boolean(setup.sheetsUrl && setup.sheetsUrl.startsWith('http'));
+}
+
+function openSetup() {
+  document.getElementById('sheets-url').value = setup.sheetsUrl;
+  document.getElementById('session-code').value = setup.sessionCode;
+  document.getElementById('qr-url').value = setup.qrUrl;
+  document.getElementById('test-status').className = 'test-status';
+  document.getElementById('test-status').textContent = '';
+  document.getElementById('setup-modal').classList.add('active');
+}
+function closeSetup() {
+  document.getElementById('setup-modal').classList.remove('active');
+}
+function saveSetup() {
+  const url = document.getElementById('sheets-url').value.trim();
+  const code = document.getElementById('session-code').value.trim() || 'bcny-default';
+  const qr = document.getElementById('qr-url').value.trim();
+  const qrChanged = qr !== setup.qrUrl;
+  setup.sheetsUrl = url;
+  setup.sessionCode = code;
+  setup.qrUrl = qr;
+  persistSetup();
+  // If QR target changed, clear cached QR canvases so they redraw with the new URL
+  if (qrChanged) {
+    qrWelcomeDone = false;
+    qrResultsDone = false;
+    const w = document.getElementById('qr-welcome'); if (w) w.innerHTML = '';
+    const r = document.getElementById('qr-results'); if (r) r.innerHTML = '';
+  }
+  closeSetup();
+  updateSyncBar();
+  if (isSheetsMode()) refreshFromSheets();
+}
+async function testSheets() {
+  const url = document.getElementById('sheets-url').value.trim();
+  const code = document.getElementById('session-code').value.trim() || 'bcny-default';
+  const status = document.getElementById('test-status');
+  status.className = 'test-status';
+  status.textContent = 'Testing…';
+  status.style.display = 'block';
+  if (!url || !url.startsWith('http')) {
+    status.className = 'test-status err';
+    status.textContent = '❌ Please paste a valid Apps Script URL (starts with https:// and ends with /exec).';
+    return;
+  }
+  try {
+    const res = await fetch(url + '?session=' + encodeURIComponent(code));
+    const data = await res.json();
+    if (data && data.ok) {
+      status.className = 'test-status ok';
+      status.textContent = `✅ Connected. Session "${code}" currently has ${data.totalResponses || 0} response${(data.totalResponses === 1) ? '' : 's'}.`;
+    } else {
+      status.className = 'test-status err';
+      status.textContent = '❌ Endpoint reachable but returned an error: ' + (data && data.error || 'unknown');
+    }
+  } catch (e) {
+    status.className = 'test-status err';
+    status.textContent = '❌ Could not reach endpoint: ' + e.message;
+  }
+}
+
+// ---------- Sync bar ----------
+function updateSyncBar(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (!isSheetsMode()) {
+    dot.className = 'sync-dot local';
+    txt.innerHTML = '<strong>Local mode</strong> · Configure Google Sheets to aggregate across devices';
+    refreshBtn.style.display = 'none';
+    return;
+  }
+  refreshBtn.style.display = 'inline-block';
+  if (state === 'error') {
+    dot.className = 'sync-dot error';
+    txt.innerHTML = `<strong>Sheets sync error</strong> · ${msg || 'Could not reach endpoint'}`;
+  } else if (state === 'live') {
+    dot.className = 'sync-dot live';
+    txt.innerHTML = `<strong>Live · Google Sheets</strong> · Session "<code>${setup.sessionCode}</code>" · ${msg || ''}`;
+  } else {
+    dot.className = 'sync-dot live';
+    txt.innerHTML = `<strong>Connected · Google Sheets</strong> · Session "<code>${setup.sessionCode}</code>"`;
+  }
+}
+
+// ---------- Screen routing ----------
+function showScreen(id) {
+  document.querySelectorAll('.screen, .results-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // Manage poll lifecycle
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (id === 'screen-results' && isSheetsMode()) {
+    pollTimer = setInterval(refreshFromSheets, 5000);
+  }
+}
+function showWelcome() { showScreen('screen-welcome'); }
+async function showResults() {
+  if (isSheetsMode()) {
+    await refreshFromSheets();
+  }
+  renderResults();
+  showScreen('screen-results');
+}
+
+// ---------- Vote flow ----------
+function startVote() {
+  currentQ = 0; answers = {}; submitted = false;
+  document.getElementById('submit-status').style.display = 'none';
+  document.getElementById('submit-error').style.display = 'none';
+  document.getElementById('btn-yes').disabled = false;
+  document.getElementById('btn-no').disabled = false;
+  renderQ();
+  showScreen('screen-vote');
+}
+function renderQ() {
+  const q = QUESTIONS[currentQ];
+  document.getElementById('q-count').textContent = `Question ${currentQ + 1} of ${QUESTIONS.length}`;
+  document.getElementById('progress-fill').style.width = `${((currentQ) / QUESTIONS.length) * 100 + 20}%`;
+  document.getElementById('q-icon').textContent = q.icon;
+  document.getElementById('q-text').textContent = q.text;
+  const card = document.getElementById('q-card');
+  card.classList.remove('fade');
+  void card.offsetWidth;
+}
+
+async function answer(val) {
+  const card = document.getElementById('q-card');
+  card.classList.add('fade');
+  setTimeout(async () => {
+    answers[currentQ] = val;
+    if (currentQ < QUESTIONS.length - 1) {
+      currentQ++;
+      renderQ();
+    } else {
+      // All questions done — submit
+      document.getElementById('btn-yes').disabled = true;
+      document.getElementById('btn-no').disabled = true;
+      if (isSheetsMode()) {
+        document.getElementById('submit-status').style.display = 'block';
+        const ok = await submitToSheets(answers);
+        document.getElementById('submit-status').style.display = 'none';
+        if (!ok) {
+          // Fall through to local aggregation so the user still sees their result,
+          // and surface a non-blocking warning.
+          QUESTIONS.forEach((_, i) => {
+            if (answers[i] === 'yes') responses[i].yes++;
+            else responses[i].no++;
+          });
+          totalRespondents++;
+          const err = document.getElementById('submit-error');
+          err.style.display = 'block';
+          err.textContent = '⚠ Could not reach Google Sheets — recorded locally only.';
+        }
+        // Refresh aggregated state from Sheets so user sees themselves in the totals.
+        await refreshFromSheets();
+      } else {
+        QUESTIONS.forEach((_, i) => {
+          if (answers[i] === 'yes') responses[i].yes++;
+          else responses[i].no++;
+        });
+        totalRespondents++;
+      }
+      submitted = true;
+      // Stash the participant's own answers so they can re-download their PDF later
+      lastSubmittedAnswers = { ...answers };
+      // Auto-generate the participant's personal PDF (their responses + score)
+      exportParticipantPDF(lastSubmittedAnswers);
+      document.getElementById('take-btn').style.display = 'none';
+      // Show the "Download my responses again" button
+      const dlBtn = document.getElementById('my-pdf-btn');
+      if (dlBtn) dlBtn.style.display = 'inline-block';
+      renderResults();
+      showScreen('screen-results');
+    }
+  }, 220);
+}
+
+// ---------- Sheets I/O ----------
+async function submitToSheets(answersObj) {
+  try {
+    const payload = {
+      session: setup.sessionCode,
+      ts: new Date().toISOString(),
+    };
+    QUESTIONS.forEach((_, i) => {
+      payload['q' + (i + 1)] = answersObj[i] || '';
+    });
+    // Use text/plain to avoid CORS preflight on Apps Script web apps.
+    await fetch(setup.sheetsUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function refreshFromSheets() {
+  if (!isSheetsMode()) return;
+  try {
+    const url = setup.sheetsUrl + '?session=' + encodeURIComponent(setup.sessionCode);
+    const res = await fetch(url, { cache: 'no-store' });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error((data && data.error) || 'Unknown error');
+    // Replace local counters with server-side aggregation.
+    responses = QUESTIONS.map((_, i) => {
+      const q = (data.questions || []).find(x => x.q === 'q' + (i + 1)) || { yes: 0, no: 0 };
+      return { yes: q.yes || 0, no: q.no || 0 };
+    });
+    totalRespondents = data.totalResponses || 0;
+    updateSyncBar('live', `${totalRespondents} response${totalRespondents === 1 ? '' : 's'}`);
+    renderResults();
+  } catch (e) {
+    updateSyncBar('error', e.message);
+  }
+}
+
+// ---------- Render results ----------
+function renderResults() {
+  const totalYes = responses.reduce((s, r) => s + r.yes, 0);
+  const totalNo = responses.reduce((s, r) => s + r.no, 0);
+  const total = totalYes + totalNo || 1;
+  const totalR = isSheetsMode() ? totalRespondents : (responses[0].yes + responses[0].no);
+  const score = Math.round((totalYes / total) * 100);
+  const color = score >= 70 ? '#1a56db' : score >= 40 ? '#d97706' : '#e02424';
+  const label = score >= 70 ? 'AI-Forward' : score >= 40 ? 'In Transition' : 'Early Stage';
+
+  document.getElementById('rcount').textContent = `${totalR} response${totalR !== 1 ? 's' : ''} · Fully anonymized`;
+  document.getElementById('score-num').textContent = (totalR === 0 ? '—' : score + '%');
+  document.getElementById('score-num').style.color = color;
+  const sb = document.getElementById('score-badge');
+  sb.textContent = totalR === 0 ? 'Awaiting responses' : label;
+  sb.style.color = color; sb.style.background = color + '22'; sb.style.borderColor = color + '55';
+  document.getElementById('score-card').style.borderColor = color + '55';
+  document.getElementById('tally-yes').textContent = totalYes;
+  document.getElementById('tally-no').textContent = totalNo;
+  document.getElementById('pie-sub').textContent = `All 5 dimensions combined · ${totalR} respondent${totalR !== 1 ? 's' : ''}`;
+
+  // Metric cards
+  const grid = document.getElementById('metric-grid');
+  grid.innerHTML = QUESTIONS.map((q, i) => {
+    const r = responses[i]; const t = r.yes + r.no || 1;
+    const pct = Math.round((r.yes / t) * 100);
+    const c = pct >= 60 ? '#34d399' : pct >= 40 ? '#fbbf24' : '#f87171';
+    return `<div class="metric-card">
+      <div class="metric-icon">${q.icon}</div>
+      <div class="metric-q">${q.text}</div>
+      <div class="metric-pct" style="color:${c}">${(r.yes + r.no === 0) ? '—' : pct + '%'}</div>
+      <div class="metric-sub">said yes</div>
+      <div class="metric-bar"><div class="metric-fill" style="width:${pct}%;background:${c}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Bar chart — create once, update in place on subsequent renders (no flicker)
+  const yesData = QUESTIONS.map((_, i) => { const r = responses[i]; const t = r.yes + r.no || 1; return Math.round((r.yes / t) * 100); });
+  const noData  = QUESTIONS.map((_, i) => { const r = responses[i]; const t = r.yes + r.no || 1; return Math.round((r.no  / t) * 100); });
+  const barCtx = document.getElementById('bar-chart').getContext('2d');
+  if (!barChart) {
+    barChart = new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: QUESTIONS.map(q => q.short),
+        datasets: [
+          { label: 'Yes', data: yesData, backgroundColor: '#1a56db', borderRadius: 4 },
+          { label: 'No',  data: noData,  backgroundColor: '#e02424', borderRadius: 4 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        animation: { duration: 400 },
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x}%` } } },
+        scales: {
+          x: { stacked: true, max: 100, ticks: { color: '#64748b', callback: v => v + '%' }, grid: { color: '#334155' } },
+          y: { stacked: true, ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+        }
+      }
+    });
+  } else {
+    barChart.data.datasets[0].data = yesData;
+    barChart.data.datasets[1].data = noData;
+    barChart.update('none');
+  }
+
+  // Pie chart — create once, update in place on subsequent renders (no flicker)
+  const pieCtx = document.getElementById('pie-chart').getContext('2d');
+  if (!pieChart) {
+    pieChart = new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Yes — Ready', 'No — Not Yet'],
+        datasets: [{ data: [totalYes, totalNo], backgroundColor: ['#1a56db', '#e02424'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 400 },
+        plugins: {
+          legend: { labels: { color: '#94a3b8', font: { size: 13 } } },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / (totalYes + totalNo || 1) * 100)}%)` } }
+        }
+      }
+    });
+  } else {
+    pieChart.data.datasets[0].data = [totalYes, totalNo];
+    pieChart.update('none');
+  }
+}
+
+// ---------- QR ----------
+// Base QR target URL (hosted page location) lives in the Setup panel (setup.qrUrl).
+// The QR code itself encodes that URL PLUS the Apps Script URL and session code
+// as query params (?s=...&c=...) — this is how phones that scan inherit the config
+// without anyone touching Setup on the phone.
+function getQRTargetUrl() {
+  return (setup && setup.qrUrl) ? setup.qrUrl : '';
+}
+function buildQRPayload() {
+  const base = getQRTargetUrl();
+  if (!base) return '';
+  const params = [];
+  if (setup.sheetsUrl) params.push('s=' + encodeURIComponent(setup.sheetsUrl));
+  if (setup.sessionCode) params.push('c=' + encodeURIComponent(setup.sessionCode));
+  if (!params.length) return base;
+  const joiner = base.indexOf('?') >= 0 ? '&' : '?';
+  return base + joiner + params.join('&');
+}
+
+function toggleQR(which) {
+  const box = document.getElementById(`qr-box-${which}`);
+  const el = document.getElementById(`qr-${which}`);
+  const urlEl = document.getElementById(`qr-url-${which}`);
+  const base = getQRTargetUrl();
+  const payload = buildQRPayload();
+  if (box.style.display === 'none') {
+    box.style.display = 'block';
+    // Guard: no base URL configured yet — prompt organizer to set it in Setup
+    if (!payload) {
+      el.innerHTML = '<div style="color:#64748b;font-size:13px;text-align:center;padding:24px 12px;line-height:1.5;">No QR URL configured.<br>Open ⚙️ Setup and paste the hosted URL for this event.</div>';
+      if (urlEl) { urlEl.style.display = 'none'; }
+      return;
+    }
+    const done = which === 'welcome' ? qrWelcomeDone : qrResultsDone;
+    if (!done) {
+      // Only show the URL text on the welcome (organizer) screen.
+      // Results screen is audience-facing — hide the path.
+      // Show the clean base URL to humans, but encode the full payload with config into the QR.
+      if (which === 'welcome') {
+        urlEl.style.display = '';
+        urlEl.textContent = base;
+      } else {
+        urlEl.style.display = 'none';
+      }
+      new QRCode(el, { text: payload, width: 160, height: 160, colorDark: '#0f172a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      if (which === 'welcome') qrWelcomeDone = true; else qrResultsDone = true;
+    }
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+// ---------- PDF Export ----------
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  let y = margin;
+
+  const totalYes = responses.reduce((s, r) => s + r.yes, 0);
+  const totalNo = responses.reduce((s, r) => s + r.no, 0);
+  const total = totalYes + totalNo || 1;
+  const totalR = isSheetsMode() ? totalRespondents : (responses[0].yes + responses[0].no);
+  const score = Math.round((totalYes / total) * 100);
+  const label = score >= 70 ? 'AI-Forward' : score >= 40 ? 'In Transition' : 'Early Stage';
+  const scoreColor = score >= 70 ? [26, 86, 219] : score >= 40 ? [217, 119, 6] : [224, 36, 36];
+
+  // Header band
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, pageW, 88, 'F');
+  doc.setFillColor(26, 86, 219);
+  doc.rect(margin, 24, 38, 38, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(148, 163, 184);
+  doc.text('BUSINESS COUNCIL OF NEW YORK STATE', margin + 50, 38);
+  doc.setFontSize(15);
+  doc.setTextColor(241, 245, 249);
+  doc.text("New York's AI Moment — Room Snapshot", margin + 50, 56);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(148, 163, 184);
+  doc.text('AI Readiness Assessment · Fully anonymized', margin + 50, 72);
+
+  // Accenture co-brand on right of header band
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  doc.text('PRESENTED BY', pageW - margin, 38, { align: 'right' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(241, 245, 249);
+  const accTextWidth = doc.getTextWidth('accenture');
+  const accX = pageW - margin - accTextWidth;
+  doc.text('accenture', pageW - margin, 58, { align: 'right' });
+  // Purple > mark above the "t"
+  // Rough positioning: "accen" is 5 of 9 chars, "t" is char 6. Offset to approximate center of the t.
+  const tCenterOffset = accTextWidth * (5.5 / 9);
+  doc.setFontSize(9);
+  doc.setTextColor(161, 0, 255); // Accenture purple #A100FF
+  doc.text('>', accX + tCenterOffset, 48, { align: 'center' });
+
+  y = 110;
+
+  // Metadata strip
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(9);
+  const meta = [
+    `Generated: ${new Date().toLocaleString()}`,
+    `Total respondents: ${totalR}`,
+    `Source: ${isSheetsMode() ? 'Google Sheets · session "' + setup.sessionCode + '"' : 'Local session'}`,
+  ];
+  doc.text(meta.join('   ·   '), margin, y);
+  y += 22;
+
+  // Score box
+  doc.setDrawColor(...scoreColor);
+  doc.setLineWidth(1.5);
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(margin, y, pageW - 2 * margin, 92, 8, 8, 'FD');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text('OVERALL ROOM AI READINESS', margin + 16, y + 22);
+  doc.setFontSize(36);
+  doc.setTextColor(...scoreColor);
+  doc.text(totalR === 0 ? '—' : `${score}%`, margin + 16, y + 60);
+  doc.setFontSize(11);
+  doc.text(totalR === 0 ? 'Awaiting responses' : label, margin + 16, y + 80);
+
+  // Tally on right
+  doc.setFontSize(9);
+  doc.setTextColor(100, 116, 139);
+  doc.text('YES', pageW - margin - 130, y + 22);
+  doc.text('NO', pageW - margin - 60, y + 22);
+  doc.setFontSize(22);
+  doc.setTextColor(15, 118, 110);
+  doc.text(String(totalYes), pageW - margin - 130, y + 50);
+  doc.setTextColor(190, 24, 37);
+  doc.text(String(totalNo), pageW - margin - 60, y + 50);
+  y += 110;
+
+  // Charts side by side
+  let chartsHeight = 0;
+  try {
+    if (barChart && pieChart) {
+      const barImg = barChart.toBase64Image('image/png', 1.0);
+      const pieImg = pieChart.toBase64Image('image/png', 1.0);
+      const colW = (pageW - 2 * margin - 16) / 2;
+      const colH = 180;
+
+      // Bar
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(margin, y, colW, colH + 36, 8, 8, 'FD');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Question-by-question breakdown', margin + 12, y + 18);
+      doc.addImage(barImg, 'PNG', margin + 12, y + 28, colW - 24, colH);
+
+      // Pie
+      const x2 = margin + colW + 16;
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x2, y, colW, colH + 36, 8, 8, 'FD');
+      doc.text('Total readiness distribution', x2 + 12, y + 18);
+      doc.addImage(pieImg, 'PNG', x2 + 12, y + 28, colW - 24, colH);
+
+      chartsHeight = colH + 48;
+    }
+  } catch (e) {
+    // Charts not yet rendered — skip
+  }
+  y += chartsHeight;
+
+  // New page if low on room for the table
+  if (y > pageH - 280) {
+    doc.addPage();
+    y = margin;
+  }
+
+  // Breakdown table
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(15, 23, 42);
+  doc.text('Detailed breakdown by question', margin, y);
+  y += 16;
+
+  // Table header
+  const colWs = [pageW - 2 * margin - 240, 60, 60, 60, 60];
+  const colXs = colWs.reduce((acc, w, i) => { acc.push((acc[i - 1] || margin) + (i === 0 ? 0 : colWs[i - 1])); return acc; }, []);
+  doc.setFillColor(241, 245, 249);
+  doc.rect(margin, y, pageW - 2 * margin, 22, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  ['Question', 'Yes', 'No', '% Yes', '% No'].forEach((h, i) => {
+    const align = i === 0 ? 'left' : 'right';
+    const x = align === 'left' ? colXs[i] + 8 : colXs[i] + colWs[i] - 8;
+    doc.text(h, x, y + 14, { align });
+  });
+  y += 22;
+
+  // Table rows
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 41, 59);
+  QUESTIONS.forEach((q, i) => {
+    const r = responses[i];
+    const t = r.yes + r.no || 1;
+    const pY = Math.round((r.yes / t) * 100);
+    const pN = Math.round((r.no / t) * 100);
+    const rowH = 30;
+    if (i % 2 === 0) {
+      doc.setFillColor(250, 251, 253);
+      doc.rect(margin, y, pageW - 2 * margin, rowH, 'F');
+    }
+    // Wrap question text
+    const qLines = doc.splitTextToSize(q.text, colWs[0] - 16);
+    doc.setFontSize(9);
+    doc.text(qLines.slice(0, 2), colXs[0] + 8, y + 12);
+    doc.setFontSize(10);
+    const cells = [String(r.yes), String(r.no), (r.yes + r.no === 0) ? '—' : pY + '%', (r.yes + r.no === 0) ? '—' : pN + '%'];
+    cells.forEach((v, ci) => {
+      const i2 = ci + 1;
+      doc.text(v, colXs[i2] + colWs[i2] - 8, y + 18, { align: 'right' });
+    });
+    y += rowH;
+    if (y > pageH - 80) { doc.addPage(); y = margin; }
+  });
+
+  // Footer
+  const footY = pageH - 32;
+  doc.setDrawColor(226, 232, 240);
+  doc.line(margin, footY - 14, pageW - margin, footY - 14);
+  doc.setFontSize(8);
+  doc.setTextColor(148, 163, 184);
+  doc.text('All responses are fully anonymized. No personal or organizational data is retained.', margin, footY);
+  // Right-side: BCNYS · Presented by Accenture
+  const pageLbl = `Page ${doc.internal.getNumberOfPages()}`;
+  doc.text(pageLbl, pageW - margin, footY, { align: 'right' });
+  const brandLine = 'BCNYS  ·  Presented by accenture';
+  const brandW = doc.getTextWidth(brandLine);
+  doc.text(brandLine, pageW - margin - doc.getTextWidth(pageLbl) - 18, footY, { align: 'right' });
+  // Tiny purple > mark above the "t" in accenture in the footer
+  doc.setTextColor(161, 0, 255);
+  doc.setFontSize(7);
+  const footerAccX = pageW - margin - doc.getTextWidth(pageLbl) - 18 - doc.getTextWidth('ure') - 2;
+  doc.text('>', footerAccX, footY - 5, { align: 'center' });
+
+  doc.save(`BCNYS_AI_Readiness_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+// ---------- Participant PDF ----------
+// Generates a personal take-home PDF with ONLY this participant's own
+// responses and their personal score. Called automatically after submission.
+function exportParticipantPDF(answersObj) {
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 48;
+
+    // Personal score
+    const yesCount = QUESTIONS.reduce((s, _, i) => s + (answersObj[i] === 'yes' ? 1 : 0), 0);
+    const noCount = QUESTIONS.length - yesCount;
+    const pScore = Math.round((yesCount / QUESTIONS.length) * 100);
+    const pLabel = pScore >= 70 ? 'AI-Forward' : pScore >= 40 ? 'In Transition' : 'Early Stage';
+    const pColor = pScore >= 70 ? [26, 86, 219] : pScore >= 40 ? [217, 119, 6] : [224, 36, 36];
+
+    // Header band
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageW, 88, 'F');
+    doc.setFillColor(26, 86, 219);
+    doc.rect(margin, 24, 38, 38, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text('BUSINESS COUNCIL OF NEW YORK STATE', margin + 50, 38);
+    doc.setFontSize(15);
+    doc.setTextColor(241, 245, 249);
+    doc.text('Your AI Readiness Assessment', margin + 50, 56);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Your personal responses · Anonymous', margin + 50, 72);
+
+    // Accenture co-brand on right of header band
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('PRESENTED BY', pageW - margin, 38, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(241, 245, 249);
+    const accTextWidth = doc.getTextWidth('accenture');
+    const accX = pageW - margin - accTextWidth;
+    doc.text('accenture', pageW - margin, 58, { align: 'right' });
+    const tCenterOffset = accTextWidth * (5.5 / 9);
+    doc.setFontSize(9);
+    doc.setTextColor(161, 0, 255);
+    doc.text('>', accX + tCenterOffset, 48, { align: 'center' });
+
+    let y = 110;
+
+    // Metadata
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(9);
+    doc.text(`Completed: ${new Date().toLocaleString()}`, margin, y);
+    y += 22;
+
+    // Personal score box
+    doc.setDrawColor(...pColor);
+    doc.setLineWidth(1.5);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(margin, y, pageW - 2 * margin, 96, 8, 8, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text('YOUR AI READINESS SCORE', margin + 16, y + 22);
+    doc.setFontSize(40);
+    doc.setTextColor(...pColor);
+    doc.text(`${pScore}%`, margin + 16, y + 64);
+    doc.setFontSize(12);
+    doc.text(pLabel, margin + 16, y + 84);
+
+    // Tally on right
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text('YES', pageW - margin - 130, y + 22);
+    doc.text('NO', pageW - margin - 60, y + 22);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(15, 118, 110);
+    doc.text(String(yesCount), pageW - margin - 130, y + 54);
+    doc.setTextColor(190, 24, 37);
+    doc.text(String(noCount), pageW - margin - 60, y + 54);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text('of 5', pageW - margin - 130, y + 70);
+    doc.text('of 5', pageW - margin - 60, y + 70);
+    y += 114;
+
+    // "Your responses" heading
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Your responses', margin, y);
+    y += 18;
+
+    // Each Q&A as a card
+    QUESTIONS.forEach((q, i) => {
+      const ans = answersObj[i];
+      const isYes = ans === 'yes';
+      const accentCol = isYes ? [15, 118, 110] : [190, 24, 37];
+      const labelText = isYes ? 'YES' : 'NO';
+
+      const qLines = doc.splitTextToSize(q.text, pageW - 2 * margin - 90);
+      const cardH = Math.max(58, 24 + qLines.length * 13);
+
+      // Page-break guard
+      if (y + cardH > pageH - 80) {
+        doc.addPage();
+        y = margin;
+      }
+
+      // Card
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(margin, y, pageW - 2 * margin, cardH, 6, 6, 'FD');
+
+      // Question number
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Q${i + 1}`, margin + 12, y + 18);
+
+      // Question text
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+      doc.text(qLines, margin + 38, y + 18);
+
+      // Answer badge on right
+      doc.setFillColor(...accentCol);
+      const badgeW = 46, badgeH = 22;
+      const badgeX = pageW - margin - badgeW - 12;
+      const badgeY = y + (cardH - badgeH) / 2;
+      doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 4, 4, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text(labelText, badgeX + badgeW / 2, badgeY + 15, { align: 'center' });
+
+      y += cardH + 10;
+    });
+
+    // Footer
+    const footY = pageH - 32;
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footY - 14, pageW - margin, footY - 14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text('Your responses are anonymous. This PDF is for your records only.', margin, footY);
+    const brandLine = 'BCNYS  ·  Presented by accenture';
+    doc.text(brandLine, pageW - margin, footY, { align: 'right' });
+    doc.setTextColor(161, 0, 255);
+    doc.setFontSize(7);
+    const footerAccX = pageW - margin - doc.getTextWidth('ure') - 2;
+    doc.text('>', footerAccX, footY - 5, { align: 'center' });
+
+    doc.save(`My_BCNYS_AI_Readiness_${new Date().toISOString().slice(0, 10)}.pdf`);
+    return true;
+  } catch (e) {
+    console.error('Participant PDF generation failed:', e);
+    return false;
+  }
+}
+
+// ---------- Init ----------
+loadSetup();
+updateSyncBar();
+showScreen('screen-welcome');
+</script>
+
+
+</body></html>
